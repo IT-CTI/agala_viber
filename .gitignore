@@ -22,3 +22,7 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 agala_viber-*.tar
 
+#ElixirLS
+.vscode
+.elixir_ls
+
