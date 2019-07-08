@@ -5,19 +5,25 @@ defmodule Agala.Provider.Viber.Helpers.Send do
   defp bootstrap(bot) do
     case bot.config() do
       %{bot: ^bot} = bot_params ->
-        {:ok,
-         Map.put(bot_params, :private, %{
-           http_opts:
-             (get_in(bot_params, [:provider_params, :hackney_opts]) || [])
-             |> Keyword.put(
-               :recv_timeout,
-               get_in(bot_params, [:provider_params, :response_timeout]) || 5000
-             )
-         })}
+        get_bot_params(bot_params)
 
       error ->
         error
     end
+  end
+
+  defp bootstrap(_bot_, bot_params), do: get_bot_params(bot_params)
+
+  defp get_bot_params(bot_params) do
+    {:ok,
+     Map.put(bot_params, :private, %{
+       http_opts:
+         (get_in(bot_params, [:provider_params, :hackney_opts]) || [])
+         |> Keyword.put(
+           :recv_timeout,
+           get_in(bot_params, [:provider_params, :response_timeout]) || 5000
+         )
+     })}
   end
 
   defp body_encode(body) when is_bitstring(body), do: body
@@ -26,9 +32,14 @@ defmodule Agala.Provider.Viber.Helpers.Send do
 
   def perform_request(%Agala.Conn{
         responser: bot,
-        response: %{method: method, payload: %{body: body} = payload}
+        response: %{method: method, payload: %{body: body, url_path: url_path} = payload},
+        private: private
       }) do
-    {:ok, bot_params} = bootstrap(bot)
+    {:ok, bot_params} =
+      case private do
+        %{agala_bot_config: agala_bot_config} -> bootstrap(bot, agala_bot_config)
+        _res -> bootstrap(bot)
+      end
 
     case HTTPoison.request(
            method,
