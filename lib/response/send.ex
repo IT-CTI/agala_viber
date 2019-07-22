@@ -32,7 +32,7 @@ defmodule Agala.Provider.Viber.Helpers.Send do
 
   def perform_request(%Agala.Conn{
         responser: bot,
-        response: %{method: method, payload: %{body: body, url_path: url_path} = payload},
+        response: %{method: method, payload: %{body: body} = payload},
         private: private
       }) do
     {:ok, bot_params} =
